@@ -43,6 +43,15 @@ jobs:
           # - "slemicro"
     steps:
       - uses: actions/checkout@v4
+      - name: Version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          source ./rpm/${{ matrix.os }}/scripts/version
+          echo "RPM_CHANNEL=$RPM_CHANNEL" >> "$GITHUB_ENV"
+          echo "RPM_VERSION=$RPM_VERSION" >> "$GITHUB_ENV"
+          echo "RPM_RELEASE=$RPM_RELEASE" >> "$GITHUB_ENV"
+          echo "RPM_MAJMIN=$RPM_MAJMIN" >> "$GITHUB_ENV"
       - name: Install Dapper
         run: |
           mkdir -p .local/bin
@@ -53,6 +62,7 @@ jobs:
         env:
           TAG: ${{ github.ref_name }}
           COMBARCH: x86_64-amd64
+          RPM_GPG_NAME: ${{ secrets.RPM_GPG_NAME }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -62,26 +72,29 @@ jobs:
         run: |
           dapper -f Dockerfile.${{ matrix.os }}.dapper rpm/${{ matrix.os }}/scripts/build
       - name: Sign
+        env:
+          TAG: ${{ github.ref_name }}
+          RPM_GPG_NAME: ${{ secrets.RPM_GPG_NAME }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PRIVATE_KEY_PASS_PHRASE: ${{ secrets.PRIVATE_KEY_PASS_PHRASE }}
+          TESTING_PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          TESTING_PRIVATE_KEY_PASS_PHRASE: ${{ secrets.PRIVATE_KEY_PASS_PHRASE }}
         run: |
           docker run --rm \
             -v "$(pwd):/workspace" \
             -w /workspace \
             -e TAG="$TAG" \
+            -e RPM_GPG_NAME="$RPM_GPG_NAME" \
             -e PRIVATE_KEY="$PRIVATE_KEY" \
             -e PRIVATE_KEY_PASS_PHRASE="$PRIVATE_KEY_PASS_PHRASE" \
             -e TESTING_PRIVATE_KEY="$TESTING_PRIVATE_KEY" \
             -e TESTING_PRIVATE_KEY_PASS_PHRASE="$TESTING_PRIVATE_KEY_PASS_PHRASE" \
             centos:7 \
             rpm/${{ matrix.os }}/scripts/sign
-        env:
-          TAG: ${{ github.ref_name }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          PRIVATE_KEY_PASS_PHRASE: ${{ secrets.PRIVATE_KEY_PASS_PHRASE }}
-          TESTING_PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          TESTING_PRIVATE_KEY_PASS_PHRASE: ${{ secrets.PRIVATE_KEY_PASS_PHRASE }}
       - name: Upload to S3
         env:
           TAG: ${{ github.ref_name }}
+          RPM_GPG_NAME: ${{ secrets.RPM_GPG_NAME }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -93,6 +106,7 @@ jobs:
             -v "$(pwd):/workspace" \
             -w /workspace \
             -e TAG="$TAG" \
+            -e RPM_GPG_NAME="$RPM_GPG_NAME" \
             -e AWS_S3_BUCKET="$AWS_S3_BUCKET" \
             -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
             -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
