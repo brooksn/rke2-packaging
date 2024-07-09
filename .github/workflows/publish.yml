@@ -33,17 +33,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch:
-          - "amd64"
-          - "srcrpm"
         os:
           - "centos7"
           - "centos8"
-          # - "centos9"
-          # - "microos"
-          # - "slemicro"
+          - "centos9"
+          - "microos"
+          - "slemicro"
+        arch:
+          - "amd64"
+          - "srcrpm"
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Version
         env:
           TAG: ${{ github.ref_name }}
