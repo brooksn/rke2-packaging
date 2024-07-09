@@ -38,7 +38,7 @@ jobs:
           - "srcrpm"
         os:
           - "centos7"
-          # - "centos8"
+          - "centos8"
           # - "centos9"
           # - "microos"
           # - "slemicro"
