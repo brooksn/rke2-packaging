@@ -64,11 +64,12 @@ jobs:
         run: |
           docker run --rm \
             -v "$(pwd):/workspace" \
-            -w /workspace centos:7 \
+            -w /workspace \
             -e PRIVATE_KEY="$PRIVATE_KEY" \
             -e PRIVATE_KEY_PASS_PHRASE="$PRIVATE_KEY_PASS_PHRASE" \
             -e TESTING_PRIVATE_KEY="$TESTING_PRIVATE_KEY" \
             -e TESTING_PRIVATE_KEY_PASS_PHRASE="$TESTING_PRIVATE_KEY_PASS_PHRASE" \
+            centos:7 \
             rpm/${{ matrix.os }}/scripts/sign
         env:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
@@ -86,13 +87,14 @@ jobs:
         run: |
           docker run --rm \
             -v "$(pwd):/workspace" \
-            -w /workspace centos:7 \
+            -w /workspace \
             -e AWS_S3_BUCKET="$AWS_S3_BUCKET" \
             -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
             -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
             -e TESTING_AWS_S3_BUCKET="$TESTING_AWS_S3_BUCKET" \
             -e TESTING_AWS_ACCESS_KEY_ID="$TESTING_AWS_ACCESS_KEY_ID" \
             -e TESTING_AWS_SECRET_ACCESS_KEY="$TESTING_AWS_SECRET_ACCESS_KEY" \
+            centos:7 \
             rpm/${{ matrix.os }}/scripts/upload-repo
       - name: Checksum
         env:
