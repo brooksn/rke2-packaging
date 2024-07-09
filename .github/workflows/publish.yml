@@ -34,15 +34,19 @@ jobs:
       matrix:
         arch:
           - "amd64"
-          - "srcrpm"
+          # - "srcrpm"
         os:
           - "centos7"
-          - "centos8"
-          - "centos9"
+          # - "centos8"
+          # - "centos9"
           # - "microos"
           # - "slemicro"
     steps:
       - uses: actions/checkout@v4
+      - name: Install Dapper
+        run: |
+          curl -sL https://releases.rancher.com/dapper/latest/dapper-$(uname -s)-$(uname -m) > ./.dapper
+          chmod +x ./.dapper
       - name: Build
         env:
           COMBARCH: x86_64-amd64
