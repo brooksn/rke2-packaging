@@ -1,0 +1,78 @@
+name: Publish
+on:
+  release:
+    types:
+      - published
+  # workflow_dispatch:
+  #   inputs:
+  #     tag:
+  #       description: "Tag to publish"
+  #       required: true
+  #       type: string
+  #     version:
+  #       description: "Version of RKE2 to publish"
+  #       required: true
+  #       type: string
+  #     channel:
+  #       description: "Channel to publish to"
+  #       required: true
+  #       type: choice
+  #       options:
+  #         - testing
+  #         - latest
+  #         - stable
+  #       default: testing
+  #     number:
+  #       description: "Number of the release"
+  #       required: true
+  #       type: number
+  #       default: 0
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch:
+          - "amd64"
+          - "srcrpm"
+        os:
+          - "centos7"
+          - "centos8"
+          - "centos9"
+          # - "microos"
+          # - "slemicro"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        env:
+          COMBARCH: x86_64-amd64
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TESTING_AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          TESTING_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TESTING_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          dapper -f Dockerfile.${{ matrix.os }}.dapper rpm/${{ matrix.os }}/scripts/build
+      - name: Sign
+        run: |
+          dapper -f Dockerfile.${{ matrix.os }}.dapper rpm/${{ matrix.os }}/scripts/sign
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PRIVATE_KEY_PASS_PHRASE: ${{ secrets.PRIVATE_KEY_PASS_PHRASE }}
+          TESTING_PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          TESTING_PRIVATE_KEY_PASS_PHRASE: ${{ secrets.PRIVATE_KEY_PASS_PHRASE }}
+      - name: Upload to S3
+        run: |
+          dapper -f Dockerfile.${{ matrix.os }}.dapper rpm/${{ matrix.os }}/scripts/upload-repo
+      - name: Checksum
+        env:
+          DIRECTORY: dist/${{ matrix.os }}
+          OUTPUT_FILE: sha256sum-${{ matrix.os }}-${{ matrix.arch }}.txt
+        run: |
+          find "$DIRECTORY" -type f | while read -r file; do
+            $checksum_cmd "$file" | awk '{print $1 "  " $2}' >>"$OUTPUT_FILE"
+          done
+      - name: Upload to GitHub
+        run: |
+          gh release upload ${{ github.ref_name }} dist/${{ matrix.os }}/*
