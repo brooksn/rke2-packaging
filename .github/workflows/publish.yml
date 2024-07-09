@@ -126,5 +126,7 @@ jobs:
             $checksum_cmd "$file" | awk '{print $1 "  " $2}' >>"$OUTPUT_FILE"
           done
       - name: Upload to GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload ${{ github.ref_name }} dist/${{ matrix.os }}/*
