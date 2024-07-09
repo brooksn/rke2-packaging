@@ -94,6 +94,7 @@ jobs:
       - name: Upload to S3
         env:
           TAG: ${{ github.ref_name }}
+          COMBARCH: x86_64-amd64
           RPM_GPG_NAME: ${{ secrets.RPM_GPG_NAME }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -106,6 +107,7 @@ jobs:
             -v "$(pwd):/workspace" \
             -w /workspace \
             -e TAG="$TAG" \
+            -e COMBARCH="$COMBARCH" \
             -e RPM_GPG_NAME="$RPM_GPG_NAME" \
             -e AWS_S3_BUCKET="$AWS_S3_BUCKET" \
             -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
