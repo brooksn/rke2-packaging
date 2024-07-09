@@ -122,9 +122,9 @@ jobs:
       - name: Checksum
         run: |
           if [ "${{ matrix.arch }}" = "srcrpm" ]; then
-            cd dist/centos7/source
+            cd dist/${{ matrix.os }}/source
           else
-            cd dist/centos7/x86_64
+            cd dist/${{ matrix.os }}/x86_64
           fi
           find *.rpm -type f | while read -r file; do
             sha256sum "$file" | awk '{print $1 "  " $2}' >> "sha256sum-${{ matrix.os }}-${{ matrix.arch }}.txt"
