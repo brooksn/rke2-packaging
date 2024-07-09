@@ -120,7 +120,7 @@ jobs:
             rpm/${{ matrix.os }}/scripts/upload-repo
       - name: Checksum
         run: |
-          if [ "srcrpm" = "srcrpm" ]; then
+          if [ "${{ matrix.arch }}" = "srcrpm" ]; then
             cd dist/centos7/source
           else
             cd dist/centos7/x86_64
@@ -133,7 +133,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           OS: ${{ matrix.os }}
         run: |
-          if [ "srcrpm" = "srcrpm" ]; then
+          if [ "${{ matrix.arch }}" = "srcrpm" ]; then
             cd dist/${{ matrix.os }}/source
           else
             cd dist/${{ matrix.os }}/x86_64
